@@ -146,3 +146,41 @@ const std::string& File::GetPath() const
 {
 	return path_;
 }
+
+bool File::IsOpened() const
+{
+	return file_ != nullptr;
+}
+
+bool File::ReadFileAsString(const std::string& file_path, std::string& content)
+{
+	File file(file_path);
+	if (!file.IsOpened())
+	{
+		return false;
+	}
+	size_t file_size = file.GetFileSize();
+	size_t read_size = 0;
+	content.reserve(file_size);
+
+	char buffer[1024];
+	while (read_size < file_size)
+	{
+		ssize_t read_length = file.Read(buffer, sizeof buffer);
+		if (read_length > 0)
+		{
+			read_size += read_length;
+			content.append(buffer, read_length);
+		}
+		else if (read_length == 0)
+		{
+			break;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	return true;
+
+}

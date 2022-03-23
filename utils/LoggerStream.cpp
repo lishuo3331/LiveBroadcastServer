@@ -47,7 +47,10 @@ LoggerStream::~LoggerStream()
 }
 LoggerStream& LoggerStream::operator<<(const std::string& str)
 {
-	buffer_.Append(str.data(), str.length());
+	if (!str.empty())
+	{
+		buffer_.Append(str.data(), str.length());
+	}
 	return *this;
 }
 

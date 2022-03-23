@@ -35,7 +35,7 @@ set(LIVE_SRCS
 
 		live/RtmpPushServer.cpp
 		live/HttpPullServer.cpp
-		)
+		live/HttpServer.cpp)
 
 set(UTILS_SRCS
 		utils/codec/FlvManager.cpp

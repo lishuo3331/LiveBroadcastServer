@@ -21,11 +21,7 @@ std::string Format::GetUrl(const std::string& str)
 {
 	auto url_begin = str.find(' ') + 1;
 	auto url_end = str.find(' ', url_begin);
-	if (str[url_end - 1] == '/')
-	{
-		url_end--;
-	}
-	return str.substr(url_begin + 1, url_end - url_begin - 1);
+	return str.substr(url_begin, url_end - url_begin);
 }
 
 std::string Format::GetPathFromUrl(const std::string& url)

@@ -4,6 +4,7 @@
 #include <csignal>
 #include "live/RtmpPushServer.h"
 #include "live/HttpPullServer.h"
+#include "live/HttpServer.h"
 
 #include "utils/Logger.h"
 
@@ -43,7 +44,7 @@ void InitSignal()
 
 int main(int argc, char* argv[])
 {
-	if (argc != 3)
+	if (argc != 4)
 	{
 		printf("wrong number of parameters\r\n");
 		exit(-1);
@@ -60,12 +61,17 @@ int main(int argc, char* argv[])
 
 	InetAddress rtmp_server_address(argv[1], true);
 	InetAddress client_server_address(argv[2], true);
+	InetAddress http_server_address(argv[3], true);
 
 	RtmpPushServer rtmp_push_server(&loop, "rtmp_push_server", rtmp_server_address);
 	rtmp_push_server.SetThreadNum(2);
 
 	HttpPullServer http_pull_server(&loop, "http_pull_server", client_server_address);
 	http_pull_server.SetThreadNum(4);
+
+	HttpServer http_server(&loop, "http_server", http_server_address);
+	http_server.SetThreadNum(2);
+	http_server.SetHttpRoot("/tmp/tmp.AGeWz2Sgze/flv");
 
 	http_pull_server.SetGetPushConnCallback([server = &rtmp_push_server](auto&& PH1)
 	{
@@ -74,6 +80,7 @@ int main(int argc, char* argv[])
 
 	rtmp_push_server.Start();
 	http_pull_server.Start();
+	http_server.Start();
 
 	loop.Loop();
 }

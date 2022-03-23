@@ -40,7 +40,7 @@ void HttpPullServer::OnClientMessage(const TcpConnectionPtr& connection_ptr, Buf
 	 * 获取HTTP请求中的url 根据上面设置的映射关系 同样获取url
 	 * 来获取到对应的server_connection 加入其中
 	 */
-	std::string url = Format::GetUrl(connection_data);
+	std::string url = Format::GetUrl(connection_data).substr(1);
 
 	RtmpPushConnectionPtr server_connection;
 	if (get_push_conn_callback_)

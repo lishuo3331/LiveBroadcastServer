@@ -58,6 +58,11 @@ public:
 	void Flush();
 
 	const std::string& GetPath() const;
+
+	bool IsOpened() const;
+
+	static bool ReadFileAsString(const std::string& file, std::string& content);
+
 private:
 	std::string path_;
 
