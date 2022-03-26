@@ -23,13 +23,16 @@ RtmpPushConnection::ShakeHandResult RtmpPushConnection::ShakeHand(Buffer* buffer
 	while (true)
 	{
 		RtmpManager::ShakeHandPackType status = rtmp_manager_.ParseShakeHand(buffer);
+		LOG_INFO << connection_ptr_->GetConnectionName() << " parse result " << status;
 		switch (status)
 		{
 			case RtmpManager::SHAKE_RTMP_C01:
 				connection_ptr_->Send(RTMP_SERVER_S01, sizeof RTMP_SERVER_S01);
+				LOG_INFO << connection_ptr_->GetConnectionName() << " send RTMP_SERVER_S01";
 				break;
 			case RtmpManager::SHAKE_RTMP_C2:
 				connection_ptr_->Send(RTMP_SERVER_S2, sizeof RTMP_SERVER_S2);
+				LOG_INFO << connection_ptr_->GetConnectionName() << " send SHAKE_RTMP_C2";
 				break;
 			case RtmpManager::SHAKE_RTMP_SET_CHUNK_SIZE:
 				break;
