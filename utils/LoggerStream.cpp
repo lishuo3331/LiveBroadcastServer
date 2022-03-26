@@ -82,6 +82,12 @@ LoggerStream& LoggerStream::operator<<(size_t val)
 	return *this << std::to_string(val);
 }
 
+LoggerStream& LoggerStream::operator<<(uint32_t val)
+{
+	return *this << std::to_string(val);
+}
+
+
 LoggerBuffer& LoggerStream::GetBuffer()
 {
 	return buffer_;

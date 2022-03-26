@@ -6,7 +6,8 @@
 #include "utils/codec/FlvManager.h"
 
 constexpr int RTMP_START_PARSE_LENGTH = 1000;
-constexpr int RTMP_CHUNK_SIZE = 4096;
+// constexpr int RTMP_CHUNK_SIZE = 4096;
+constexpr int RTMP_CHUNK_SIZE = 0x5a0;
 
 typedef std::function<void(const FlvTagPtr&)> NewFlvTagCallback;
 class RtmpManager

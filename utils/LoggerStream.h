@@ -50,6 +50,7 @@ public:
 
 	LoggerStream& operator<<(int);
 	LoggerStream& operator<<(size_t);
+	LoggerStream& operator<<(uint32_t);
 
 	LoggerBuffer& GetBuffer();
 

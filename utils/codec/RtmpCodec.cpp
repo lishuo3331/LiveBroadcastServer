@@ -1,6 +1,7 @@
 #include <sstream>
 #include "utils/codec/RtmpCodec.h"
 #include "utils/codec/FlvCodec.h"
+#include "utils/Logger.h"
 
 ssize_t RtmpCodec::DecodeHeader(const char* data, size_t length, RtmpPack* rtmp_pack_)
 {
@@ -154,6 +155,7 @@ void RtmpPack::SetPackType(uint8_t type)
 			pack_type_ = static_cast<RtmpPackType>(type);
 			break;
 		default:
+			LOG_INFO << "unknown SetPackType " << type;
 			pack_type_ = RtmpPackType::RTMP_OTHER;
 	}
 }

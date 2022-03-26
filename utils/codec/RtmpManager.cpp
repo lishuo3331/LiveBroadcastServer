@@ -196,7 +196,8 @@ ssize_t RtmpManager::ParseVideoAudio(Buffer* buffer, RtmpPack video_audio_pack[2
 	ssize_t result = 0;
 	ssize_t parsed;
 
-	for (int i = 0; i < 2; ++i)
+	int i = 0;
+	while (i < 1)
 	{
 		parsed = RtmpCodec::DecodeHeader(buffer->ReadBegin(), buffer->ReadableLength(), &video_audio_pack[i]);
 		buffer->AddReadIndex(parsed);
@@ -206,18 +207,19 @@ ssize_t RtmpManager::ParseVideoAudio(Buffer* buffer, RtmpPack video_audio_pack[2
 			return -1;
 		}
 
-		if (video_audio_pack[i].GetRtmpPackType() == RtmpPack::RTMP_AUDIO ||
-				video_audio_pack[i].GetRtmpPackType() == RtmpPack::RTMP_VIDEO)
+		auto pack_type = video_audio_pack[i].GetRtmpPackType();
+		size_t data_size = video_audio_pack[i].GetBodyDataSize();
+		if (pack_type == RtmpPack::RTMP_AUDIO || pack_type == RtmpPack::RTMP_VIDEO)
 		{
-			size_t data_size = video_audio_pack[i].GetBodyDataSize();
 			video_audio_pack[i].AppendData(buffer->ReadBegin(), data_size);
 			buffer->AddReadIndex(data_size);
 			result += data_size;
+			i++;
 		}
 		else
 		{
-			// 简化处理 如果不连续则返回错误
-			return -1;
+			LOG_WARN << "jump pack type " << pack_type << ",length " << data_size;
+			buffer->AddReadIndex(data_size);
 		}
 	}
 
@@ -243,6 +245,7 @@ ssize_t RtmpManager::ParseBody(Buffer* buffer)
 {
 	// 只有在读满一个chunk分块4096字节后 返回解析一个新的header的时候
 	// 当remain小于等于RTMP_CHUNK_SIZE的时候说明 此chunk分块结束了
+	LOG_INFO << "GetBodyRemainSize " << current_rtmp_pack_.GetBodyRemainSize() << ",read_chunk_size_ " << read_chunk_size_;
 	if (current_rtmp_pack_.GetBodyRemainSize() <=
 		RTMP_CHUNK_SIZE && (read_chunk_size_ == 0))
 	{
@@ -357,7 +360,8 @@ RtmpManager::ShakeHandPackType RtmpManager::ParseShakeHand(Buffer* buffer)
 			else
 			{
 				buffer->AddReadIndex(1536);
-				shake_hand_status_ = SHAKE_RTMP_SET_CHUNK_SIZE;
+				// shake_hand_status_ = SHAKE_RTMP_SET_CHUNK_SIZE;
+				shake_hand_status_ = SHAKE_RTMP_CONNECT;
 				return SHAKE_RTMP_C2;
 			}
 		}

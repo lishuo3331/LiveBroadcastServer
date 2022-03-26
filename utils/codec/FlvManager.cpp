@@ -139,7 +139,7 @@ FlvTag* FlvManager::GetVideoAudioTags()
 ssize_t FlvManager::EncodeHeadersToBuffer(Buffer* buffer)
 {
 	uint32_t data_length = FlvHeader::FLV_HEADER_LENGTH + script_tag_.GetCurrentTagSize() + 4
-						   + video_audio_tags[0].GetCurrentTagSize() + 4 + video_audio_tags[1].GetCurrentTagSize() + 4;
+						   + video_audio_tags[0].GetCurrentTagSize() + 4; //+ video_audio_tags[1].GetCurrentTagSize() + 4;
 
 	if (buffer->WritableLength() < data_length)
 	{
@@ -154,9 +154,9 @@ ssize_t FlvManager::EncodeHeadersToBuffer(Buffer* buffer)
 	buffer->AppendData(script_tag_.GetBody());
 
 	video_audio_tags[0].SetPreviousTagSize(script_tag_.GetCurrentTagSize());
-	video_audio_tags[1].SetPreviousTagSize(video_audio_tags[0].GetCurrentTagSize());
+	// video_audio_tags[1].SetPreviousTagSize(video_audio_tags[0].GetCurrentTagSize());
 
-	for (int i = 0; i < 2; ++i)
+	for (int i = 0; i < 1; ++i)
 	{
 		buffer->AppendData(video_audio_tags[i].GetHeader(), FlvTag::FLV_TAG_HEADER_LENGTH);
 		buffer->AppendData(video_audio_tags[i].GetBody());
