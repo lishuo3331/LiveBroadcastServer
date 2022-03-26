@@ -14,8 +14,7 @@
             <div id="streamURL">
                 <div class="url-input">
                     <label for="sURL">Stream URL:</label>
-                    <input id="sURL" type="text" value="http://192.168.80.100:10000/lsmg" />
-                    <button onclick="switch_mds()">Switch to MediaDataSource</button>
+                    <input id="sURL" type="text" value="http://192.168.50.200:10000/lsmg" />
                 </div>
                 <div class="options">
                     <input type="checkbox" id="isLive" onchange="saveSettings()" checked />
@@ -44,14 +43,47 @@
             </div>
         </div>
         <div class="controls">
-            <button onclick="flv_load()">Load</button>
-            <button onclick="flv_start()">Start</button>
-            <button onclick="flv_pause()">Pause</button>
-            <button onclick="flv_destroy()">Destroy</button>
+            <button onclick="flv_load(0)">Load</button>
+            <button onclick="flv_start(0)">Start</button>
+            <button onclick="flv_pause(0)">Pause</button>
+            <button onclick="flv_destroy(0)">Destroy</button>
             <input style="width:100px" type="text" name="seekpoint"/>
-            <button onclick="flv_seekto()">SeekTo</button>
+            <button onclick="flv_seekto(0)">SeekTo</button>
         </div>
         <textarea name="logcatbox" class="logcatBox" rows="10" readonly></textarea>
+    </div>
+
+    <div class="mainContainer">
+        <div>
+            <div id="streamURL">
+                <div class="url-input">
+                    <label for="sURL">Stream URL:</label>
+                    <input id="sURL" type="text" value="http://192.168.50.200:10000/lsmg" />
+                </div>
+            </div>
+            <div id="mediaSourceURL" class="hidden">
+                <div class="url-input">
+                    <label for="msURL">MediaDataSource JsonURL:</label>
+                    <input id="msURL" type="text" value="http://127.0.0.1/flv/7182741.json" />
+                    <button onclick="switch_url()">Switch to URL</button>
+                </div>
+            </div>
+        </div>
+        <div class="video-container">
+            <div>
+                <video name="videoElement" class="centeredVideo" controls autoplay>
+                    Your browser is too old which doesn't support HTML5 video.
+                </video>
+            </div>
+        </div>
+        <div class="controls">
+            <button onclick="flv_load(1)">Load</button>
+            <button onclick="flv_start(1)">Start</button>
+            <button onclick="flv_pause(1)">Pause</button>
+            <button onclick="flv_destroy(1)">Destroy</button>
+            <input style="width:100px" type="text" name="seekpoint"/>
+            <button onclick="flv_seekto(1)">SeekTo</button>
+        </div>
     </div>
 
     <script src="flv.js"></script>
@@ -60,7 +92,7 @@
         var checkBoxFields = ['isLive', 'withCredentials', 'hasAudio', 'hasVideo'];
         var streamURL, mediaSourceURL;
 
-        function flv_load() {
+        function flv_load(index) {
             console.log('isSupported: ' + flvjs.isSupported());
             if (mediaSourceURL.className === '') {
                 var url = document.getElementById('msURL').value;
@@ -69,7 +101,7 @@
                 xhr.open('GET', url, true);
                 xhr.onload = function (e) {
                     var mediaDataSource = JSON.parse(xhr.response);
-                    flv_load_mds(mediaDataSource);
+                    flv_load_mds(mediaDataSource, index);
                 }
                 xhr.send();
             } else {
@@ -85,20 +117,21 @@
                 }
                 mediaDataSource['url'] = document.getElementById('sURL').value;
                 console.log('MediaDataSource', mediaDataSource);
-                flv_load_mds(mediaDataSource);
+                flv_load_mds(mediaDataSource, index);
             }
         }
 
-        function flv_load_mds(mediaDataSource) {
-            var element = document.getElementsByName('videoElement')[0];
-            if (typeof player !== "undefined") {
-                if (player != null) {
-                    player.unload();
-                    player.detachMediaElement();
-                    player.destroy();
-                    player = null;
-                }
-            }
+        function flv_load_mds(mediaDataSource, index) {
+            console.log("flv_load_mds " + index)
+            var element = document.getElementsByName('videoElement')[index];
+            // if (typeof player !== "undefined") {
+            //     if (player != null) {
+            //         player.unload();
+            //         player.detachMediaElement();
+            //         player.destroy();
+            //         player = null;
+            //     }
+            // }
             player = flvjs.createPlayer(mediaDataSource, {
                 enableWorker: false,
                 lazyLoadMaxDuration: 3 * 60,
