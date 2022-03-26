@@ -108,7 +108,7 @@ void FlvTag::SetDataSize(const uint8_t* data_size)
 	memcpy(&header_[DATA_SIZE_SUB], data_size, DATA_SIZE_LENGTH);
 }
 
-void FlvTag::SetTimeStamp(uint8_t* timestamp)
+void FlvTag::SetTimeStamp(const uint8_t* timestamp)
 {
 	memcpy(&header_[TIMESTAMP_SUB], timestamp, TIMESTAMP_LENGTH);
 }

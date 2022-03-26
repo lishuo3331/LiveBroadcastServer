@@ -22,10 +22,7 @@ void RtmpCodec::EncodeHeaderToFlvTag(RtmpPack* rtmp_pack_, FlvTag* flv_tag)
 {
 	flv_tag->SetTagType(static_cast<uint8_t>(rtmp_pack_->GetRtmpPackType()));
 	flv_tag->SetDataSize(rtmp_pack_->GetDataSizePtr());
-
-	AddTimeStamp(rtmp_pack_->GetTimeStamp());
-	uint8_t ts[3] = {ts_[2], ts_[1], ts_[0]};
-	flv_tag->SetTimeStamp(ts);
+	flv_tag->SetTimeStamp(rtmp_pack_->GetTimeStamp());
 }
 
 RtmpCodec::RtmpCodec() :
@@ -36,9 +33,13 @@ RtmpCodec::RtmpCodec() :
 
 void RtmpCodec::AddTimeStamp(const uint8_t* timestamp)
 {
-	timestamp_ += timestamp[2];
-	timestamp_ += timestamp[1] * 256;
-	timestamp_ += timestamp[0] * 65536;
+//	timestamp_ += timestamp[2];
+//	timestamp_ += timestamp[1] * 256;
+//	timestamp_ += timestamp[0] * 65536;
+
+	ts_[0] = timestamp[2];
+	ts_[1] = timestamp[1];
+	ts_[2] = timestamp[0];
 }
 
 void RtmpCodec::EncodeHeaderAndSwapBuffer(RtmpPack* rtmp_pack_, FlvTag* flv_tag)

@@ -245,7 +245,7 @@ ssize_t RtmpManager::ParseBody(Buffer* buffer)
 {
 	// 只有在读满一个chunk分块4096字节后 返回解析一个新的header的时候
 	// 当remain小于等于RTMP_CHUNK_SIZE的时候说明 此chunk分块结束了
-	LOG_INFO << "GetBodyRemainSize " << current_rtmp_pack_.GetBodyRemainSize() << ",read_chunk_size_ " << read_chunk_size_;
+	// LOG_INFO << "GetBodyRemainSize " << current_rtmp_pack_.GetBodyRemainSize() << ",read_chunk_size_ " << read_chunk_size_;
 	if (current_rtmp_pack_.GetBodyRemainSize() <=
 		RTMP_CHUNK_SIZE && (read_chunk_size_ == 0))
 	{
