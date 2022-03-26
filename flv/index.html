@@ -14,7 +14,7 @@
             <div id="streamURL">
                 <div class="url-input">
                     <label for="sURL">Stream URL:</label>
-                    <input id="sURL" type="text" value="http://192.168.50.200:10000/lsmg" />
+                    <input id="sURL" name="sURL" type="text" value="http://192.168.50.200:10000/lsmg" />
                 </div>
             </div>
             <div id="mediaSourceURL" class="hidden">
@@ -47,7 +47,7 @@
             <div id="streamURL">
                 <div class="url-input">
                     <label for="sURL">Stream URL:</label>
-                    <input id="sURL" type="text" value="http://192.168.50.200:10000/lsmg" />
+                    <input id="sURL" name="sURL" type="text" value="http://192.168.50.200:10000/lsmg" />
                 </div>
             </div>
             <div id="mediaSourceURL" class="hidden">
@@ -74,6 +74,40 @@
             <button onclick="flv_seekto(1)">SeekTo</button>
         </div>
     </div>
+
+    <div class="mainContainer">
+        <div>
+            <div id="streamURL">
+                <div class="url-input">
+                    <label for="sURL">Stream URL:</label>
+                    <input id="sURL" name="sURL" type="text" value="http://192.168.50.200:10000/lsmg" />
+                </div>
+            </div>
+            <div id="mediaSourceURL" class="hidden">
+                <div class="url-input">
+                    <label for="msURL">MediaDataSource JsonURL:</label>
+                    <input id="msURL" type="text" value="http://127.0.0.1/flv/7182741.json" />
+                    <button onclick="switch_url()">Switch to URL</button>
+                </div>
+            </div>
+        </div>
+        <div class="video-container">
+            <div>
+                <video name="videoElement" class="centeredVideo" controls autoplay>
+                    Your browser is too old which doesn't support HTML5 video.
+                </video>
+            </div>
+        </div>
+        <div class="controls">
+            <button onclick="flv_load(2)">Load</button>
+            <button onclick="flv_start(2)">Start</button>
+            <button onclick="flv_pause(2)">Pause</button>
+            <button onclick="flv_destroy(2)">Destroy</button>
+            <input style="width:100px" type="text" name="seekpoint"/>
+            <button onclick="flv_seekto(2)">SeekTo</button>
+        </div>
+    </div>
+
     <div class="options">
         <input type="checkbox" id="isLive" onchange="saveSettings()" checked />
         <label for="isLive">isLive</label>
@@ -115,7 +149,7 @@
                     var checkbox = document.getElementById(field);
                     mediaDataSource[field] = checkbox.checked;
                 }
-                mediaDataSource['url'] = document.getElementById('sURL').value;
+                mediaDataSource['url'] = document.getElementsByName('sURL')[index].value;
                 console.log('MediaDataSource', mediaDataSource);
                 flv_load_mds(mediaDataSource, index);
             }
