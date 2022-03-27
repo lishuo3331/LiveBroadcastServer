@@ -3,245 +3,198 @@
 #include "utils/codec/FlvCodec.h"
 #include "utils/Logger.h"
 
-ssize_t RtmpCodec::DecodeHeader(const char* data, size_t length, RtmpPack* rtmp_pack_)
+
+RtmpCodec::RtmpCodec()
 {
-	if (!rtmp_pack_ || !data)
+
+}
+
+ssize_t RtmpCodec::DecodeData(Buffer* buffer)
+{
+	size_t before_readable_length = buffer->ReadableLength();
+	bool error = false;
+	bool data_enough = true;
+	while (data_enough && !error)
+	{
+		ssize_t parsed = 0;
+		if (parsed_status == PARSE_FIRST_HEADER)
+		{
+			bool first_header_finish = false;
+			parsed = ParseFirstHeader(buffer, &first_header_finish);
+			if (first_header_finish)
+			{
+				parsed_status = PARSE_RTMP_HEADER;
+			}
+			if (parsed < 0)
+			{
+				LOG_ERROR << "ParseFirstHeader error";
+				error = true;
+			}
+		}
+		else
+		{
+			bool pack_finish = false;
+			parsed = DecodePack(buffer, &pack_finish);
+			if (parsed < 0)
+			{
+				LOG_ERROR << "DecodePack error";
+				error = true;
+			}
+		}
+		if (parsed == 0)
+		{
+			data_enough = false;
+		}
+	}
+	if (error)
 	{
 		return -1;
 	}
+	return static_cast<ssize_t>(before_readable_length - buffer->ReadableLength());
+}
 
-	if (length == 0)
+ssize_t RtmpCodec::DecodePack(Buffer* buffer, bool* pack_finish)
+{
+	if (buffer->ReadableLength() == 0)
 	{
 		return 0;
 	}
-
-	return rtmp_pack_->DecodeHeader(data, length);
-}
-
-void RtmpCodec::EncodeHeaderToFlvTag(RtmpPack* rtmp_pack_, FlvTag* flv_tag)
-{
-	flv_tag->SetTagType(static_cast<uint8_t>(rtmp_pack_->GetRtmpPackType()));
-	flv_tag->SetDataSize(rtmp_pack_->GetDataSizePtr());
-	flv_tag->SetTimeStamp(rtmp_pack_->GetTimeStamp());
-}
-
-RtmpCodec::RtmpCodec() :
-	timestamp_(0)
-{
-
-}
-
-void RtmpCodec::AddTimeStamp(const uint8_t* timestamp)
-{
-//	timestamp_ += timestamp[2];
-//	timestamp_ += timestamp[1] * 256;
-//	timestamp_ += timestamp[0] * 65536;
-
-	ts_[0] = timestamp[2];
-	ts_[1] = timestamp[1];
-	ts_[2] = timestamp[0];
-}
-
-void RtmpCodec::EncodeHeaderAndSwapBuffer(RtmpPack* rtmp_pack_, FlvTag* flv_tag)
-{
-	EncodeHeaderToFlvTag(rtmp_pack_, flv_tag);
-	SwapBuffer(rtmp_pack_, flv_tag);
-}
-
-void RtmpCodec::SwapBuffer(RtmpPack* rtmp_pack_, FlvTag* flv_tag)
-{
-	Buffer* rtmp_buffer = rtmp_pack_->GetBuffer();
-	Buffer* tag_buffer = flv_tag->GetBody();
-
-	rtmp_buffer->SwapBuffer(tag_buffer);
-}
-
-ssize_t RtmpPack::DecodeHeader(const char* data, size_t length)
-{
-	uint8_t fmt = (uint8_t)data[0] >> 6;
-	csid_ = data[0] & 0b00111111;
-
-	if (fmt > RTMPPACK_FMT_MAX)
+	ssize_t read_length = 0;
+	if (parsed_status == PARSE_RTMP_HEADER)
 	{
-		return -1;
+		ssize_t parsed = DecodeHeader(buffer->ReadBegin(), buffer->ReadableLength());
+		read_length = parsed;
+		if (parsed > 0)
+		{
+			buffer->AddReadIndex(parsed);
+			parsed_status = PARSE_RTMP_BODY;
+		}
+		else if (parsed < 0)
+		{
+			LOG_ERROR << "ParseHeader error";
+		}
+	}
+	else if (parsed_status == PARSE_RTMP_BODY)
+	{
+		bool body_finish = false;
+		size_t parsed_length = DecodeBody(buffer->ReadBegin(), buffer->ReadableLength(), &body_finish);
+		buffer->AddReadIndex(parsed_length);
+		read_length = static_cast<ssize_t>(parsed_length);
+		if (body_finish)
+		{
+			//	FlvTagPtr tag_ptr = std::make_shared<FlvTag>();
+			//	rtmp_codec_.EncodeHeaderAndSwapBuffer(&current_rtmp_pack_, tag_ptr.get());
+			//	ProcessNewFlvTag(tag_ptr);
+			parsed_status = PARSE_RTMP_HEADER;
+		}
+	}
+	return read_length;
+}
+
+ssize_t RtmpCodec::DecodeHeader(const char* data, size_t length)
+{
+	return current_rtmp_pack_.DecodeHeader(data, length);
+}
+
+size_t RtmpCodec::DecodeBody(const char* data, size_t length, bool* body_finish)
+{
+	// 只有在读满一个chunk分块4096字节后 返回解析一个新的header的时候
+	// 当remain小于等于RTMP_CHUNK_SIZE的时候说明 此chunk分块结束了
+	// LOG_INFO << "GetBodyRemainSize " << current_rtmp_pack_.GetBodyRemainSize() << ",read_chunk_size_ " << read_chunk_size_;
+
+	bool chunk_over = false;
+	if (current_rtmp_pack_.GetBodyRemainSize() <=
+		rtmp_chunk_size_ && (read_chunk_size_ == 0))
+	{
+		chunk_over = true;
 	}
 
-	fmt_ = static_cast<RtmpPackFmt>(fmt);
-
-	ssize_t result;
-	switch (fmt_)
+	size_t remain = current_rtmp_pack_.GetBodyRemainSize();
+	size_t read_length = 0;
+	*body_finish = false;
+	if (chunk_over)
 	{
-		case FMT0:
-			result = DecodeFmt0(data + 1, length - 1);
-			break;
-		case FMT1:
-			result = DecodeFmt1(data + 1, length - 1);
-			break;
-		case FMT2:
-			result = DecodeFmt2(data + 1, length - 1);
-			break;
-		case FMT3:
-			result = FMT3_HEADER_LENGTH;
-			return result + 1; /* 不直接返回会与下面逻辑混淆*/
-		default:
-			result = -1;
-			break;
-	}
-
-	if (result <= 0)
-	{
-		return result;
+		// 当前chunk没有分块 或者最后一个chunk分块被接收
+		if (length < remain)
+		{
+			current_rtmp_pack_.AppendData(data, length);
+			read_length = length;
+		}
+		else
+		{
+			current_rtmp_pack_.AppendData(data, remain);
+			read_length = length;
+			*body_finish = true;
+		}
 	}
 	else
 	{
-		return result + 1;// 2b fmt and 6b csid_
+		// 当前chunk分块没有全部接受
+		size_t current_chunk_remain = rtmp_chunk_size_ - read_chunk_size_;
+		if (length < current_chunk_remain)
+		{
+			current_rtmp_pack_.AppendData(data, length);
+			read_length = length;
+			read_chunk_size_ += length;
+		}
+		else
+		{
+			current_rtmp_pack_.AppendData(data, current_chunk_remain);
+			read_length = current_chunk_remain;
+			/* chunk 结束 清除当前chunk已读字节数*/
+			read_chunk_size_ = 0;
+			*body_finish = true;
+		}
 	}
+	return read_length;
 }
 
-RtmpPack::RtmpPackType RtmpPack::GetRtmpPackType() const
+ssize_t RtmpCodec::ParseFirstHeader(Buffer* buffer, bool* first_header_finish)
 {
-	return pack_type_;
-}
-
-ssize_t RtmpPack::DecodeFmt0(const char* data, size_t length)
-{
-	if (length < FMT0_HEADER_LENGTH)
+	bool has_audio = false;
+	*first_header_finish = false;
+	if (buffer->ReadableLength() < RTMP_START_PARSE_LENGTH)
 	{
 		return 0;
 	}
+	/**
+	 * 解析脚本包并保存到flv_manager_
+	 */
 
-	DecodeFmt1(data, length);
-
-	memcpy(&stream_id_, &data[7], sizeof stream_id_);
-
-	return FMT0_HEADER_LENGTH;
-}
-
-ssize_t RtmpPack::DecodeFmt1(const char* data, size_t length)
-{
-	if (length < FMT1_HEADER_LENGTH)
+	ssize_t sum_parsed_length = 0;
+	while ((has_audio && !first_audio_pack_) || !first_video_pack_ || !first_script_pack_)
 	{
-		return 0;
+		bool pack_finish = false;
+		ssize_t parsed_length = DecodePack(buffer, &pack_finish);
+		if (pack_finish)
+		{
+			switch (current_rtmp_pack_.GetRtmpPackType())
+			{
+			case RtmpPack::RTMP_AUDIO:
+				first_audio_pack_ = std::make_shared<RtmpPack>(current_rtmp_pack_);
+				break;
+			case RtmpPack::RTMP_VIDEO:
+				first_video_pack_ = std::make_shared<RtmpPack>(current_rtmp_pack_);
+				break;
+			case RtmpPack::RTMP_SCRIPT:
+				first_script_pack_ = std::make_shared<RtmpPack>(current_rtmp_pack_);
+			default:
+				LOG_ERROR << "ParseFirstHeader error pack type " << current_rtmp_pack_.GetRtmpPackType();
+			}
+		}
+		if (parsed_length < 0)
+		{
+			return -1;
+		}
+		else if (parsed_length == 0)
+		{
+			break;
+		}
+		else if (parsed_length > 0)
+		{
+			sum_parsed_length += parsed_length;
+		}
 	}
-
-	memcpy(timestamp_, &data[0], sizeof timestamp_);
-	memcpy(data_size_, &data[3], sizeof data_size_);
-
-	SetPackType(data[6]);
-
-	return FMT1_HEADER_LENGTH;
-}
-
-ssize_t RtmpPack::DecodeFmt2(const char* data, size_t length)
-{
-	if (length < FMT2_HEADER_LENGTH)
-	{
-		return 0;
-	}
-	memcpy(timestamp_, &data[0], sizeof timestamp_);
-
-	return FMT2_HEADER_LENGTH;
-}
-
-void RtmpPack::SetPackType(uint8_t type)
-{
-	switch (type)
-	{
-		case 8:
-		case 9:
-		case 18:
-		case 2:
-		case 3:
-		case 4:
-			pack_type_ = static_cast<RtmpPackType>(type);
-			break;
-		default:
-			LOG_INFO << "unknown SetPackType " << type;
-			pack_type_ = RtmpPackType::RTMP_OTHER;
-	}
-}
-
-uint32_t RtmpPack::GetBodyDataSize() const
-{
-	/*
-	 *data_size为三个字节的十六进制数据
-	*/
-	return data_size_[0] * 65536 + data_size_[1] * 256 + data_size_[2];
-}
-
-void RtmpPack::SetBodyDataSize(uint32_t data_size)
-{
-	uint8_t* data_size_ptr =reinterpret_cast<uint8_t*>(&data_size);
-	data_size_[0] = data_size_ptr[2];
-	data_size_[1] = data_size_ptr[1];
-	data_size_[2] = data_size_ptr[0];
-}
-
-const uint8_t* RtmpPack::GetDataSizePtr() const
-{
-	return data_size_;
-}
-
-RtmpPack::RtmpPackFmt RtmpPack::GetFmt() const
-{
-	return fmt_;
-}
-
-uint8_t RtmpPack::GetCsid() const
-{
-	return csid_;
-}
-
-const uint8_t* RtmpPack::GetTimeStamp() const
-{
-	return timestamp_;
-}
-
-uint32_t RtmpPack::GetBodyRemainSize() const
-{
-	return GetBodyDataSize() - GetBodyCurrentSize();
-}
-
-uint32_t RtmpPack::GetBodyCurrentSize() const
-{
-	return buffer_.ReadableLength();
-}
-
-void RtmpPack::AppendData(const char* data, size_t length)
-{
-	buffer_.AppendData(data, length);
-}
-
-Buffer* RtmpPack::GetBuffer()
-{
-	return &buffer_;
-}
-
-std::string RtmpPack::GetHeaderDebugMessage()
-{
-	std::ostringstream ss;
-
-	uint8_t fmt = (static_cast<uint8_t>(fmt_) << 6) + csid_;
-	ss << std::hex << (int)fmt << " ";
-
-
-	switch (fmt_)
-	{
-		case FMT0:
-			ss << (int)timestamp_[0] << " " << (int)timestamp_[1] << " " << (int)timestamp_[2] << " ";
-			ss << (int)data_size_[0] << " " << (int)data_size_[1] << " " << (int)data_size_[2] << " ";
-			ss << static_cast<int>(pack_type_);
-			break;
-		case FMT1:
-			ss << (int)timestamp_[0] << " " << (int)timestamp_[1] << " " << (int)timestamp_[2] << " ";
-			ss << (int)data_size_[0] << " " << (int)data_size_[1] << " " << (int)data_size_[2] << " ";
-			ss << static_cast<int>(pack_type_);
-			break;
-		case FMT2:
-			ss << (int)timestamp_[0] << " " << (int)timestamp_[1] << " " << (int)timestamp_[2] << " ";
-			break;
-		case FMT3:
-			break;
-	}
-	return ss.str();
+	*first_header_finish = (!has_audio || first_audio_pack_) && first_video_pack_ && first_script_pack_;
+	return sum_parsed_length;
 }

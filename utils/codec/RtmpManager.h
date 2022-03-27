@@ -88,23 +88,6 @@ private:
 
 	RtmpPack release_pack_;
 
-	ssize_t ParseFirstHeader(Buffer* buffer);
-	ssize_t ParseScriptPack(Buffer* buffer, RtmpPack* script_pack);
-	ssize_t ParseVideoAudio(Buffer* buffer, RtmpPack video_audio_pack[2]);
-
-	ssize_t ParseBody(Buffer* buffer);
-
-	/**
-	 * 从Buffer中解析 Header, 不移动Buffer读指针
-	 * @param buffer
-	 * @param rtmp_pack
-	 * @return 成功返回解析的长度 数据不足返回-1
-	 */
-	static ssize_t ParseHeader(const Buffer* buffer, RtmpPack* rtmp_pack);
-
-	static ssize_t ParseBody(Buffer* buffer, RtmpPack* rtmp_pack, bool chunk_over,
-			uint32_t* read_chunk_size, ParseStatus* parsed_status);
-
 	/**
 	 * 解析头部后 解析body  如果解析头部或body时长度不足则返回0 不移动读指针
 	 * 如果完成解析则移动读指针
@@ -112,7 +95,7 @@ private:
 	 * @param rtmp_pack
 	 * @return 解析成功返回解析长度 长度不足返回0 失败返回-1
 	 */
-	static ssize_t ParseHeaderAndBody(Buffer* buffer, RtmpPack* rtmp_pack);
+	ssize_t ParseHeaderAndBody(Buffer* buffer, RtmpPack* rtmp_pack);
 
 	void ProcessNewFlvTag(const FlvTagPtr& tag);
 };

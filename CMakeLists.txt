@@ -71,7 +71,7 @@ set(THREAD_SRCS
 set(BASE_SRCS
 		${UTILS_SRCS}
 		${THREAD_SRCS}
-)
+        utils/codec/Rtmp2FlvCodec.cpp utils/codec/Rtmp2FlvCodec.h utils/codec/RtmpPack.cpp utils/codec/RtmpPack.h)
 
 set(NETWORK_SRCS
 		${NETWORK_SRCS}

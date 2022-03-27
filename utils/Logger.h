@@ -7,6 +7,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <assert.h>
 #include "utils/Timestamp.h"
 #include "utils/LoggerStream.h"
 
@@ -83,5 +84,16 @@ Logger(Logger::WARN, __FILENAME__, __LINE__).GetStream()
 Logger(Logger::ERROR, __FILENAME__, __LINE__).GetStream()
 #define LOG_FATAL if (Logger::GetLogLevel() <= Logger::FATAL)\
 Logger(Logger::FATAL, __FILENAME__, __LINE__).GetStream()
+
+#define MESSAGE_ASSERT(r, msg) 	\
+    do                          \
+	{                              \
+		if (!(r))	\
+		{	\
+			printf("[%s]failed, %s\n", #r, msg);	\
+			assert((r));	\
+		}	\
+	}while(0)
+
 
 #endif //LIVEBROADCASTSERVER_LOGGER_H
