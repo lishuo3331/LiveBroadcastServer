@@ -20,11 +20,11 @@ private:
 	 * @brief 将RtmpPack的头部部分 转换到 FlvTag的头部
 	 * @return
 	*/
-	void EncodeHeaderToFlvTag(RtmpPack* rtmp_pack_, FlvTag* flv_tag);
+	static void EncodeHeaderToFlvTag(RtmpPack* rtmp_pack_, FlvTag* flv_tag);
 
 	static void SwapBuffer(RtmpPack* rtmp_pack_, FlvTag* flv_tag);
 
-	void EncodeHeaderAndSwapBuffer(RtmpPack* rtmp_pack_, FlvTag* flv_tag);
+	static void EncodeHeaderAndSwapBuffer(RtmpPack* rtmp_pack_, FlvTag* flv_tag);
 };
 
 

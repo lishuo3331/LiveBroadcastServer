@@ -6,7 +6,7 @@
 
 void Rtmp2FlvCodec::Transform(RtmpPack* rtmp_pack_, FlvTag* flv_tag)
 {
-
+	EncodeHeaderAndSwapBuffer(rtmp_pack_, flv_tag);
 }
 
 void Rtmp2FlvCodec::EncodeHeaderAndSwapBuffer(RtmpPack* rtmp_pack_, FlvTag* flv_tag)

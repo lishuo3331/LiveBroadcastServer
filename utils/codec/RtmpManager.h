@@ -73,13 +73,6 @@ private:
 
 	FlvManager flv_manager_;
 
-	RtmpPack current_rtmp_pack_;
-
-	/* 由于chunk的分块存在 导致 当body大于4096字节时, 每读取4096个字节 需要重新解析一次header故在此记录*/
-	uint32_t read_chunk_size_;
-	/* 用于标识当前chunk是否解析完毕 未解析完不能创建新的tag*/
-	bool chunk_over_;
-
 	NewFlvTagCallback new_flv_tag_callback_;
 
 	FlvTagPtr last_flv_ptr_;

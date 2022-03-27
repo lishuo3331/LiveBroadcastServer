@@ -1,6 +1,7 @@
 #include <cassert>
 #include <iostream>
 #include "utils/codec/RtmpManager.h"
+#include "utils/codec/Rtmp2FlvCodec.h"
 #include "utils/Format.h"
 #include "utils/Logger.h"
 
@@ -22,7 +23,14 @@ RtmpManager::~RtmpManager()
 
 ssize_t RtmpManager::ParseData(Buffer* buffer)
 {
-	return rtmp_codec_.DecodeData(buffer);
+	bool pack_finish = false;
+	ssize_t result = rtmp_codec_.DecodeData(buffer, &pack_finish);
+	if (pack_finish)
+	{
+		// TODO
+		RtmpPack pack = rtmp_codec_.GetLastRtmpPack();
+	}
+	return result;
 }
 
 FlvManager* RtmpManager::GetFlvManager()

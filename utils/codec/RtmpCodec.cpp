@@ -11,7 +11,7 @@ RtmpCodec::RtmpCodec():
 
 }
 
-ssize_t RtmpCodec::DecodeData(Buffer* buffer)
+ssize_t RtmpCodec::DecodeData(Buffer* buffer, bool* pack_finish)
 {
 	size_t before_readable_length = buffer->ReadableLength();
 	bool error = false;
@@ -35,8 +35,7 @@ ssize_t RtmpCodec::DecodeData(Buffer* buffer)
 		}
 		else
 		{
-			bool pack_finish = false;
-			parsed = DecodePack(buffer, &pack_finish);
+			parsed = DecodePack(buffer, pack_finish);
 			if (parsed < 0)
 			{
 				LOG_ERROR << "DecodePack error";

@@ -16,7 +16,7 @@ public:
 	~RtmpCodec() = default;
 
 
-	ssize_t DecodeData(Buffer* buffer);
+	ssize_t DecodeData(Buffer* buffer, bool* pack_finish);
 
 	ssize_t DecodePack(Buffer* buffer, bool* pack_finish);
 
