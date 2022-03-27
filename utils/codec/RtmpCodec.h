@@ -20,6 +20,8 @@ public:
 
 	ssize_t DecodePack(Buffer* buffer, bool* pack_finish);
 
+	RtmpPack GetLastRtmpPack() const;
+
 private:
 
 	const uint32_t RTMP_START_PARSE_LENGTH = 1000;

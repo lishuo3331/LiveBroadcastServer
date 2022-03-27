@@ -37,12 +37,11 @@ void RtmpManager::SetNewFlvTagCallback(const NewFlvTagCallback& callback)
 
 std::string RtmpManager::GetUrlFromConnectPack() const
 {
-//	RtmpPack connect_pack = connect_pack_;
-//	std::string body_str = connect_pack.GetBuffer()->ReadAllAsString();
-//	auto begin_idx = body_str.find("rtmp");
-//	size_t len = strlen(&body_str[begin_idx]);
-	// return body_str.substr(begin_idx, len);
-	return "rtmp://192.168.50.200:8000/lsmg";
+	RtmpPack connect_pack = connect_pack_;
+	std::string body_str = connect_pack.GetBuffer()->ReadAllAsString();
+	auto begin_idx = body_str.find("rtmp");
+	size_t len = strlen(&body_str[begin_idx]);
+	return body_str.substr(begin_idx, len);
 }
 
 std::string RtmpManager::GetPasswordFromReleasePack()
@@ -212,6 +211,7 @@ ssize_t RtmpManager::ParseHeaderAndBody(Buffer* buffer, RtmpPack* rtmp_pack)
 {
 	bool pack_finish = false;
 	ssize_t parsed = rtmp_codec_.DecodePack(buffer, &pack_finish);
+	*rtmp_pack = rtmp_codec_.GetLastRtmpPack();
 	if (!pack_finish)
 	{
 		return 0;

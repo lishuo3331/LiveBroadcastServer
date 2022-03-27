@@ -101,6 +101,11 @@ ssize_t RtmpCodec::DecodePack(Buffer* buffer, bool* pack_finish)
 	return read_length;
 }
 
+RtmpPack RtmpCodec::GetLastRtmpPack() const
+{
+	return last_rtmp_pack_;
+}
+
 ssize_t RtmpCodec::DecodeHeader(const char* data, size_t length)
 {
 	return current_rtmp_pack_.DecodeHeader(data, length);
