@@ -81,6 +81,8 @@ public:
 	ssize_t DecodeHeader(const char* data, size_t length);
 
 	RtmpPackType GetRtmpPackType() const;
+	std::string GetRtmpPackTypeStr() const;
+	std::string GetFmtStr() const;
 
 	uint32_t GetBodyDataSize() const;
 

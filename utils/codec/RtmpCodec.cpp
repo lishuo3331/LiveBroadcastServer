@@ -4,7 +4,9 @@
 #include "utils/Logger.h"
 
 
-RtmpCodec::RtmpCodec()
+RtmpCodec::RtmpCodec():
+		decode_data_status(PARSE_FIRST_HEADER),
+		decode_pack_status(PARSE_RTMP_HEADER)
 {
 
 }
@@ -17,13 +19,13 @@ ssize_t RtmpCodec::DecodeData(Buffer* buffer)
 	while (data_enough && !error)
 	{
 		ssize_t parsed = 0;
-		if (parsed_status == PARSE_FIRST_HEADER)
+		if (decode_data_status == PARSE_FIRST_HEADER)
 		{
 			bool first_header_finish = false;
 			parsed = ParseFirstHeader(buffer, &first_header_finish);
 			if (first_header_finish)
 			{
-				parsed_status = PARSE_RTMP_HEADER;
+				decode_data_status = PARSE_DATA_PACK;
 			}
 			if (parsed < 0)
 			{
@@ -60,32 +62,40 @@ ssize_t RtmpCodec::DecodePack(Buffer* buffer, bool* pack_finish)
 		return 0;
 	}
 	ssize_t read_length = 0;
-	if (parsed_status == PARSE_RTMP_HEADER)
+	if (decode_pack_status == PARSE_RTMP_HEADER)
 	{
 		ssize_t parsed = DecodeHeader(buffer->ReadBegin(), buffer->ReadableLength());
 		read_length = parsed;
 		if (parsed > 0)
 		{
 			buffer->AddReadIndex(parsed);
-			parsed_status = PARSE_RTMP_BODY;
+			decode_pack_status = PARSE_RTMP_BODY;
 		}
 		else if (parsed < 0)
 		{
 			LOG_ERROR << "ParseHeader error";
 		}
 	}
-	else if (parsed_status == PARSE_RTMP_BODY)
+	if (decode_pack_status == PARSE_RTMP_BODY)
 	{
 		bool body_finish = false;
 		size_t parsed_length = DecodeBody(buffer->ReadBegin(), buffer->ReadableLength(), &body_finish);
 		buffer->AddReadIndex(parsed_length);
-		read_length = static_cast<ssize_t>(parsed_length);
+		read_length += static_cast<ssize_t>(parsed_length);
 		if (body_finish)
 		{
 			//	FlvTagPtr tag_ptr = std::make_shared<FlvTag>();
 			//	rtmp_codec_.EncodeHeaderAndSwapBuffer(&current_rtmp_pack_, tag_ptr.get());
 			//	ProcessNewFlvTag(tag_ptr);
-			parsed_status = PARSE_RTMP_HEADER;
+			decode_pack_status = PARSE_RTMP_HEADER;
+
+			if (chunk_over_)
+			{
+				last_rtmp_pack_ = current_rtmp_pack_;
+				current_rtmp_pack_.GetBuffer()->DropAllData();
+				LOG_INFO << current_rtmp_pack_.GetHeaderDebugMessage();
+				*pack_finish = true;
+			}
 		}
 	}
 	return read_length;
@@ -102,17 +112,17 @@ size_t RtmpCodec::DecodeBody(const char* data, size_t length, bool* body_finish)
 	// 当remain小于等于RTMP_CHUNK_SIZE的时候说明 此chunk分块结束了
 	// LOG_INFO << "GetBodyRemainSize " << current_rtmp_pack_.GetBodyRemainSize() << ",read_chunk_size_ " << read_chunk_size_;
 
-	bool chunk_over = false;
+	chunk_over_ = false;
 	if (current_rtmp_pack_.GetBodyRemainSize() <=
 		rtmp_chunk_size_ && (read_chunk_size_ == 0))
 	{
-		chunk_over = true;
+		chunk_over_ = true;
 	}
 
 	size_t remain = current_rtmp_pack_.GetBodyRemainSize();
 	size_t read_length = 0;
 	*body_finish = false;
-	if (chunk_over)
+	if (chunk_over_)
 	{
 		// 当前chunk没有分块 或者最后一个chunk分块被接收
 		if (length < remain)
@@ -123,7 +133,7 @@ size_t RtmpCodec::DecodeBody(const char* data, size_t length, bool* body_finish)
 		else
 		{
 			current_rtmp_pack_.AppendData(data, remain);
-			read_length = length;
+			read_length = remain;
 			*body_finish = true;
 		}
 	}
@@ -151,7 +161,7 @@ size_t RtmpCodec::DecodeBody(const char* data, size_t length, bool* body_finish)
 
 ssize_t RtmpCodec::ParseFirstHeader(Buffer* buffer, bool* first_header_finish)
 {
-	bool has_audio = false;
+	bool has_audio = true;
 	*first_header_finish = false;
 	if (buffer->ReadableLength() < RTMP_START_PARSE_LENGTH)
 	{
@@ -168,18 +178,19 @@ ssize_t RtmpCodec::ParseFirstHeader(Buffer* buffer, bool* first_header_finish)
 		ssize_t parsed_length = DecodePack(buffer, &pack_finish);
 		if (pack_finish)
 		{
-			switch (current_rtmp_pack_.GetRtmpPackType())
+			switch (last_rtmp_pack_.GetRtmpPackType())
 			{
 			case RtmpPack::RTMP_AUDIO:
-				first_audio_pack_ = std::make_shared<RtmpPack>(current_rtmp_pack_);
+				first_audio_pack_ = std::make_shared<RtmpPack>(last_rtmp_pack_);
 				break;
 			case RtmpPack::RTMP_VIDEO:
-				first_video_pack_ = std::make_shared<RtmpPack>(current_rtmp_pack_);
+				first_video_pack_ = std::make_shared<RtmpPack>(last_rtmp_pack_);
 				break;
 			case RtmpPack::RTMP_SCRIPT:
-				first_script_pack_ = std::make_shared<RtmpPack>(current_rtmp_pack_);
+				first_script_pack_ = std::make_shared<RtmpPack>(last_rtmp_pack_);
+				break;
 			default:
-				LOG_ERROR << "ParseFirstHeader error pack type " << current_rtmp_pack_.GetRtmpPackType();
+				LOG_ERROR << "ParseFirstHeader error pack type " << last_rtmp_pack_.GetRtmpPackType();
 			}
 		}
 		if (parsed_length < 0)

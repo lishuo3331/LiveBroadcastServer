@@ -42,7 +42,7 @@ RtmpPushConnection::ShakeHandResult RtmpPushConnection::ShakeHand(Buffer* buffer
 				connection_ptr_->Send(RTMP_SERVER_PEER_BANDWIDTH, sizeof RTMP_SERVER_PEER_BANDWIDTH);
 				connection_ptr_->Send(RTMP_SERVER_SET_CHUNK_SIZE, sizeof RTMP_SERVER_SET_CHUNK_SIZE);
 				connection_ptr_->Send(RTMP_SERVER_CONNECT_RESULT, sizeof RTMP_SERVER_CONNECT_RESULT);
-				connection_ptr_->Send(RTMP_SERVER_RESULT, sizeof RTMP_SERVER_RESULT);
+				// connection_ptr_->Send(RTMP_SERVER_RESULT, sizeof RTMP_SERVER_RESULT);
 				break;
 			}
 			/** 解析完release包后 进行用户校验*/
@@ -53,7 +53,7 @@ RtmpPushConnection::ShakeHandResult RtmpPushConnection::ShakeHand(Buffer* buffer
 			case RtmpManager::SHAKE_RTMP_FCPUBLISH:
 				break;
 			case RtmpManager::SHAKE_RTMP_CREATE_STREAM:
-				// connection_ptr_->Send(RTMP_SERVER_RESULT, sizeof RTMP_SERVER_RESULT);
+				connection_ptr_->Send(RTMP_SERVER_RESULT, sizeof RTMP_SERVER_RESULT);
 				break;
 			case RtmpManager::SHAKE_RTMP_PUBLISH:
 				connection_ptr_->Send(RTMP_SERVER_START, sizeof RTMP_SERVER_START);

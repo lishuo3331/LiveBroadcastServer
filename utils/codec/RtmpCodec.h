@@ -24,21 +24,34 @@ private:
 
 	const uint32_t RTMP_START_PARSE_LENGTH = 1000;
 
-	enum DecodeStatus
+	enum DecodeDataStatus
 	{
 		PARSE_FIRST_HEADER,
+		PARSE_DATA_PACK
+	};
+
+	enum DecodePackStatus
+	{
 		PARSE_RTMP_HEADER,
 		PARSE_RTMP_BODY
 	};
 
-	DecodeStatus parsed_status;
+	DecodeDataStatus decode_data_status;
+	DecodePackStatus decode_pack_status;
 
-	// int rtmp_chunk_size_ = 4096;
-	uint32_t rtmp_chunk_size_ = 0x5a0;
+	uint32_t rtmp_chunk_size_ = 4096;
+	// uint32_t rtmp_chunk_size_ = 0x5a0;
 	/* 由于chunk的分块存在 导致 当body大于4096字节时, 每读取4096个字节 需要重新解析一次header故在此记录*/
 	uint32_t read_chunk_size_;
 
+	// 正在解析的数据包
 	RtmpPack current_rtmp_pack_;
+
+	// 为false时 说明rtmp数据包还不完整 只有为true时一个rtmp数据包才收完
+	bool chunk_over_;
+
+	// 上一个解析完成的数据包
+	RtmpPack last_rtmp_pack_;
 
 	RtmpPackPtr first_script_pack_;
 	RtmpPackPtr first_video_pack_;

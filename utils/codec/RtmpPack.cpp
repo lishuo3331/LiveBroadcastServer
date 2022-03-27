@@ -61,6 +61,44 @@ RtmpPack::RtmpPackType RtmpPack::GetRtmpPackType() const
 	return pack_type_;
 }
 
+std::string RtmpPack::GetRtmpPackTypeStr() const
+{
+	switch (pack_type_)
+	{
+	case RTMP_OTHER:
+		return "RTMP_OTHER";
+	case RTMP_ABORT:
+		return "RTMP_ABORT";
+	case RTMP_ACKNOWLEDGE:
+		return "RTMP_ACKNOWLEDGE";
+	case RTMP_CONTROL:
+		return "RTMP_CONTROL";
+	case RTMP_AUDIO:
+		return "RTMP_AUDIO";
+	case RTMP_VIDEO:
+		return "RTMP_VIDEO";
+	case RTMP_SCRIPT:
+		return "RTMP_SCRIPT";
+	}
+	return "GetRtmpPackTypeStr ERROR";
+}
+
+std::string RtmpPack::GetFmtStr() const
+{
+	switch (fmt_)
+	{
+	case FMT0:
+		return "FMT0";
+	case FMT1:
+		return "FMT1";
+	case FMT2:
+		return "FMT2";
+	case FMT3:
+		return "FMT3";
+	}
+	return "ERROR GetFmtStr";
+}
+
 ssize_t RtmpPack::DecodeFmt0(const char* data, size_t length)
 {
 	if (length < FMT0_HEADER_LENGTH)
@@ -179,27 +217,9 @@ std::string RtmpPack::GetHeaderDebugMessage()
 {
 	std::ostringstream ss;
 
-	uint8_t fmt = (static_cast<uint8_t>(fmt_) << 6) + csid_;
-	ss << std::hex << (int)fmt << " ";
+	ss << "fmt: " << GetFmtStr();
+	ss << ",size: " << GetBodyDataSize();
+	ss << ",type: " << GetRtmpPackTypeStr();
 
-
-	switch (fmt_)
-	{
-	case FMT0:
-		ss << (int)timestamp_[0] << " " << (int)timestamp_[1] << " " << (int)timestamp_[2] << " ";
-		ss << (int)data_size_[0] << " " << (int)data_size_[1] << " " << (int)data_size_[2] << " ";
-		ss << static_cast<int>(pack_type_);
-		break;
-	case FMT1:
-		ss << (int)timestamp_[0] << " " << (int)timestamp_[1] << " " << (int)timestamp_[2] << " ";
-		ss << (int)data_size_[0] << " " << (int)data_size_[1] << " " << (int)data_size_[2] << " ";
-		ss << static_cast<int>(pack_type_);
-		break;
-	case FMT2:
-		ss << (int)timestamp_[0] << " " << (int)timestamp_[1] << " " << (int)timestamp_[2] << " ";
-		break;
-	case FMT3:
-		break;
-	}
 	return ss.str();
 }
