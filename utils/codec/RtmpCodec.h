@@ -41,8 +41,11 @@ private:
 	DecodeDataStatus decode_data_status;
 	DecodePackStatus decode_pack_status;
 
+#ifdef MONITOR_MODE
+	uint32_t rtmp_chunk_size_ = 0x5a0;
+#else
 	uint32_t rtmp_chunk_size_ = 4096;
-	// uint32_t rtmp_chunk_size_ = 0x5a0;
+#endif
 	/* 由于chunk的分块存在 导致 当body大于4096字节时, 每读取4096个字节 需要重新解析一次header故在此记录*/
 	uint32_t read_chunk_size_;
 

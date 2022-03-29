@@ -88,8 +88,12 @@ RtmpManager::ShakeHandPackType RtmpManager::ParseShakeHand(Buffer* buffer)
 			else
 			{
 				buffer->AddReadIndex(1536);
+
+#ifdef MONITOR_MODE
+				shake_hand_status_ = SHAKE_RTMP_CONNECT;
+#else
 				shake_hand_status_ = SHAKE_RTMP_SET_CHUNK_SIZE;
-				// shake_hand_status_ = SHAKE_RTMP_CONNECT;
+#endif
 				return SHAKE_RTMP_C2;
 			}
 		}

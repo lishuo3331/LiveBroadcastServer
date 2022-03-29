@@ -42,7 +42,9 @@ RtmpPushConnection::ShakeHandResult RtmpPushConnection::ShakeHand(Buffer* buffer
 				connection_ptr_->Send(RTMP_SERVER_PEER_BANDWIDTH, sizeof RTMP_SERVER_PEER_BANDWIDTH);
 				connection_ptr_->Send(RTMP_SERVER_SET_CHUNK_SIZE, sizeof RTMP_SERVER_SET_CHUNK_SIZE);
 				connection_ptr_->Send(RTMP_SERVER_CONNECT_RESULT, sizeof RTMP_SERVER_CONNECT_RESULT);
-				// connection_ptr_->Send(RTMP_SERVER_RESULT, sizeof RTMP_SERVER_RESULT);
+#ifdef MONITOR_MODE
+				connection_ptr_->Send(RTMP_SERVER_RESULT, sizeof RTMP_SERVER_RESULT);
+#endif
 				break;
 			}
 			/** 解析完release包后 进行用户校验*/
@@ -53,7 +55,11 @@ RtmpPushConnection::ShakeHandResult RtmpPushConnection::ShakeHand(Buffer* buffer
 			case RtmpManager::SHAKE_RTMP_FCPUBLISH:
 				break;
 			case RtmpManager::SHAKE_RTMP_CREATE_STREAM:
-				connection_ptr_->Send(RTMP_SERVER_RESULT, sizeof RTMP_SERVER_RESULT);
+#ifdef MONITOR_MODE
+#else
+			connection_ptr_->Send(RTMP_SERVER_RESULT, sizeof RTMP_SERVER_RESULT);
+#endif
+
 				break;
 			case RtmpManager::SHAKE_RTMP_PUBLISH:
 				connection_ptr_->Send(RTMP_SERVER_START, sizeof RTMP_SERVER_START);
@@ -112,7 +118,10 @@ const Buffer& RtmpPushConnection::GetHeaderDataBuffer()
 
 		rtmp_to_flv_codec_.Transform(first_script_pack, first_script_tag);
 		rtmp_to_flv_codec_.Transform(first_video_pack, first_video_tag);
-		rtmp_to_flv_codec_.Transform(first_audio_pack, first_audio_tag);
+		if (first_audio_pack)
+		{
+			rtmp_to_flv_codec_.Transform(first_audio_pack, first_audio_tag);
+		}
 
 		header_buffer_.AppendData(FlvHeader::DEFAULT_HEADER, FlvHeader::FLV_HEADER_LENGTH);
 
@@ -124,9 +133,12 @@ const Buffer& RtmpPushConnection::GetHeaderDataBuffer()
 		header_buffer_.AppendData(first_video_tag->GetHeader(), FlvTag::FLV_TAG_HEADER_LENGTH);
 		header_buffer_.AppendData(first_video_tag->GetBody());
 
-		header_buffer_.AppendData(htonl(first_video_tag->GetCurrentTagSize()));
-		header_buffer_.AppendData(first_audio_tag->GetHeader(), FlvTag::FLV_TAG_HEADER_LENGTH);
-		header_buffer_.AppendData(first_audio_tag->GetBody());
+		if (first_audio_pack)
+		{
+			header_buffer_.AppendData(htonl(first_video_tag->GetCurrentTagSize()));
+			header_buffer_.AppendData(first_audio_tag->GetHeader(), FlvTag::FLV_TAG_HEADER_LENGTH);
+			header_buffer_.AppendData(first_audio_tag->GetBody());
+		}
 	}
 	return header_buffer_;
 }

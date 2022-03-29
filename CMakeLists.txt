@@ -4,6 +4,8 @@ project("LiveBroadcastServer")
 
 set(CMAKE_CXX_FLAGS "-Wall -Werror -std=c++17 -g -o0")
 
+# add_definitions(-DMONITOR_MODE)
+
 include_directories(${CMAKE_SOURCE_DIR})
 
 link_directories(/usr/lib64/mysql)

@@ -165,7 +165,12 @@ size_t RtmpCodec::DecodeBody(const char* data, size_t length, bool* body_finish)
 
 ssize_t RtmpCodec::ParseFirstHeader(Buffer* buffer, bool* first_header_finish)
 {
+#ifdef MONITOR_MODE
+	bool has_audio = false;
+#else
 	bool has_audio = true;
+#endif
+
 	*first_header_finish = false;
 	if (buffer->ReadableLength() < RTMP_START_PARSE_LENGTH)
 	{

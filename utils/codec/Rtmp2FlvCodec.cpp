@@ -22,7 +22,12 @@ void Rtmp2FlvCodec::Transform(const RtmpPackPtr& rtmp_pack_, FlvTagPtr& flv_tag)
 	time_ptr[1] = rtmp_pack_->GetTimeStamp()[1];
 	time_ptr[2] = rtmp_pack_->GetTimeStamp()[0];
 
+	// TODO moniter
+#ifdef MONITOR_MODE
+	base_timestamp_ = timestamp;
+#else
 	base_timestamp_ += timestamp;
+#endif
 
 	flv_tag->SetTimeStamp(base_timestamp_);
 
