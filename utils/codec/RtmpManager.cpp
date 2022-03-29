@@ -10,10 +10,7 @@ RtmpManager::RtmpManager():
 		shake_hand_status_(RtmpManager::SHAKE_RTMP_C01),
 		parsed_length_(0),
 		rtmp_codec_(),
-		flv_manager_(),
-		read_chunk_size_(0),
-		chunk_over_(true),
-		last_flv_ptr_()
+		flv_manager_()
 {
 }
 
