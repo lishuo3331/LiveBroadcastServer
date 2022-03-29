@@ -54,6 +54,8 @@ public:
 
 	size_t AppendData(size_t number);
 
+	size_t AppendData(uint32_t number);
+
 	std::string ReadAllAsString();
 	/**
 	 * 从sockfd中读取数据并保存到Buffer中
