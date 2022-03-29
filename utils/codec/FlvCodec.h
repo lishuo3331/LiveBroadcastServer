@@ -158,7 +158,7 @@ private:
 	const static int TAG_TYPE_SUB = 0;
 	const static int DATA_SIZE_SUB = 1;
 	const static int TIMESTAMP_SUB = 4;
-	const static int STREAM_ID_SUB = 6;
+	const static int STREAM_ID_SUB = 8;
 
 	// const static int PREVIOUS_TAG_SIZE_LENGTH = 4;
 	const static int TAG_TYPE_LENGTH = 1;
