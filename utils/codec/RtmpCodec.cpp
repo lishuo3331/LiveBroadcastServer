@@ -16,14 +16,14 @@ ssize_t RtmpCodec::DecodeData(Buffer* buffer, bool* pack_finish)
 	size_t before_readable_length = buffer->ReadableLength();
 	bool error = false;
 	bool data_enough = true;
+	*pack_finish = false;
 	while (data_enough && !error)
 	{
 		ssize_t parsed = 0;
 		if (decode_data_status == PARSE_FIRST_HEADER)
 		{
-			bool first_header_finish = false;
-			parsed = ParseFirstHeader(buffer, &first_header_finish);
-			if (first_header_finish)
+			parsed = ParseFirstHeader(buffer, pack_finish);
+			if (*pack_finish)
 			{
 				decode_data_status = PARSE_DATA_PACK;
 			}

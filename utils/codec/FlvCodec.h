@@ -25,7 +25,7 @@ public:
 	* @brief FlvHeader长度
 	*/
 	const static int FLV_HEADER_LENGTH = 9;
-	static char DEFAULT_HEADER[];
+	constexpr const static char DEFAULT_HEADER[] = { 0x46, 0x4C, 0x56, 0x01, 0x01, 0x00, 0x00, 0x00, 0x09 };
 
 	FlvHeader() :
 			flv_("FLV"),
@@ -73,7 +73,7 @@ public:
 	/**
 	 * @brief FlvTagHeader长度
 	*/
-	const static int FLV_TAG_HEADER_LENGTH = 15;
+	const static int FLV_TAG_HEADER_LENGTH = 11;
 
 	FlvTag();
 	~FlvTag();
@@ -84,11 +84,11 @@ public:
 	*/
 	uint32_t GetDataSize() const;
 
-	/**
-	 * @brief 获取上一个数据包的长度 其中不包含previous_tag_size的四个字节 包含DataSize
-	 * @return
-	*/
-	uint32_t GetPreviousTagSize() const;
+//	/**
+//	 * @brief 获取上一个数据包的长度 其中不包含previous_tag_size的四个字节 包含DataSize
+//	 * @return
+//	*/
+//	uint32_t GetPreviousTagSize() const;
 
 	/**
 	 * @brief 作用类似GetPreviousTagSize 不过为获取的当前数据包的数据包长度 用于进行校验
@@ -136,7 +136,7 @@ public:
 
 	void SetSteamId(uint8_t* stream_id);
 
-	void SetPreviousTagSize(uint32_t previous_tag_size);
+//	void SetPreviousTagSize(uint32_t previous_tag_size);
 
 	uint8_t GetTagType() const;
 
@@ -154,20 +154,20 @@ private:
 	//uint8_t timestamp_extend_;
 	//uint8_t stream_id_[3]; // 0
 
-	const static int PREVIOUS_TAG_SIZE_SUB = 0;
-	const static int TAG_TYPE_SUB = 4;
-	const static int DATA_SIZE_SUB = 5;
-	const static int TIMESTAMP_SUB = 8;
-	const static int STREAM_ID_SUB = 10;
+	// const static int PREVIOUS_TAG_SIZE_SUB = 0;
+	const static int TAG_TYPE_SUB = 0;
+	const static int DATA_SIZE_SUB = 1;
+	const static int TIMESTAMP_SUB = 4;
+	const static int STREAM_ID_SUB = 6;
 
-	const static int PREVIOUS_TAG_SIZE_LENGTH = 4;
+	// const static int PREVIOUS_TAG_SIZE_LENGTH = 4;
 	const static int TAG_TYPE_LENGTH = 1;
 	const static int DATA_SIZE_LENGTH = 3;
 	const static int TIMESTAMP_LENGTH = 3;
 	const static int STREAM_ID_LENGTH = 3;
 
 	/* 由于header会进行多次拷贝 所以为了减少拷贝次数 直接保存序列化后的结果*/
-	char header_[15];
+	char header_[11];
 	Buffer body_;
 };
 typedef std::shared_ptr<FlvTag> FlvTagPtr;

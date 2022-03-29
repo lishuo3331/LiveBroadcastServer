@@ -30,6 +30,8 @@ public:
 
 private:
 
+	size_t last_tag_size_;
+
 	TcpConnectionPtr connection_ptr_;
 
 	void OnConnection(const TcpConnectionPtr& connection_ptr);

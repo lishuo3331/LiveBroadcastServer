@@ -9,7 +9,7 @@ constexpr int RTMP_START_PARSE_LENGTH = 1000;
 // constexpr int RTMP_CHUNK_SIZE = 4096;
 constexpr int RTMP_CHUNK_SIZE = 0x5a0;
 
-typedef std::function<void(const FlvTagPtr&)> NewFlvTagCallback;
+typedef std::function<void(const RtmpPackPtr&)> NewRtmpPackCallback;
 class RtmpManager
 {
 public:
@@ -56,11 +56,13 @@ public:
 
 	size_t GetParsedLength() const;
 
-	void SetNewFlvTagCallback(const NewFlvTagCallback& callback);
-
 	std::string GetUrlFromConnectPack() const;
 
 	std::string GetPasswordFromReleasePack();
+
+	void SetNewRtmpPackCallback(const NewRtmpPackCallback& callback);
+
+	RtmpCodec rtmp_codec_;
 
 private:
 
@@ -69,11 +71,7 @@ private:
 
 	size_t parsed_length_;
 
-	RtmpCodec rtmp_codec_;
-
 	FlvManager flv_manager_;
-
-	NewFlvTagCallback new_flv_tag_callback_;
 
 	FlvTagPtr last_flv_ptr_;
 
@@ -81,6 +79,7 @@ private:
 
 	RtmpPack release_pack_;
 
+	NewRtmpPackCallback new_rtmp_pack_callback_;
 	/**
 	 * 解析头部后 解析body  如果解析头部或body时长度不足则返回0 不移动读指针
 	 * 如果完成解析则移动读指针

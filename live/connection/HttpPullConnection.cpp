@@ -6,6 +6,7 @@
 #include "utils/Format.h"
 
 HttpPullConnection::HttpPullConnection(const TcpConnectionPtr& connection_ptr):
+	last_tag_size_(0),
 	connection_ptr_(connection_ptr)
 {
 	connection_ptr_->SetConnectionCallback(
@@ -41,12 +42,16 @@ void HttpPullConnection::SendHeaderOnConnection(const Buffer& buffer)
 
 void HttpPullConnection::AddFlvTag(const FlvTagPtr& flv_tag_ptr)
 {
-	std::string length_rn = Format::ToHexStringWithCrlf(flv_tag_ptr->GetSumSize());
+	std::string length_rn = Format::ToHexStringWithCrlf(flv_tag_ptr->GetSumSize() + 4);
 	Buffer temp_buffer;
 	temp_buffer.AppendData(length_rn);
+	// TODO temp
+	temp_buffer.AppendData(htonl(last_tag_size_));
 	temp_buffer.AppendData(flv_tag_ptr->GetHeader(), FlvTag::FLV_TAG_HEADER_LENGTH);
 	temp_buffer.AppendData(flv_tag_ptr->GetBody());
 	temp_buffer.AppendData("\r\n");
+
+	last_tag_size_ = flv_tag_ptr->GetCurrentTagSize();
 
 	connection_ptr_->Send(temp_buffer);
 }

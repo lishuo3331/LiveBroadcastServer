@@ -13,8 +13,8 @@ RtmpPushConnection::RtmpPushConnection(const TcpConnectionPtr& connection_ptr) :
 		last_write_size_(0),
 		header_buffer_()
 {
-	rtmp_manager_.SetNewFlvTagCallback(
-			[this](auto&& PH1){RtmpPushConnection::OnNewFlvTag(PH1);}
+	rtmp_manager_.SetNewRtmpPackCallback(
+			[this](auto&& PH1){RtmpPushConnection::OnNewRtmpPack(PH1);}
 			);
 }
 
@@ -102,7 +102,31 @@ const Buffer& RtmpPushConnection::GetHeaderDataBuffer()
 {
 	if (header_buffer_.ReadableLength() == 0)
 	{
-		flv_manager_->EncodeHeadersToBuffer(&header_buffer_);
+		RtmpPackPtr first_script_pack = rtmp_manager_.rtmp_codec_.first_script_pack_;
+		RtmpPackPtr first_video_pack = rtmp_manager_.rtmp_codec_.first_video_pack_;
+		RtmpPackPtr first_audio_pack = rtmp_manager_.rtmp_codec_.first_audio_pack_;
+
+		FlvTagPtr first_script_tag = std::make_shared<FlvTag>();
+		FlvTagPtr first_video_tag = std::make_shared<FlvTag>();
+		FlvTagPtr first_audio_tag = std::make_shared<FlvTag>();
+
+		rtmp_to_flv_codec_.Transform(first_script_pack, first_script_tag);
+		rtmp_to_flv_codec_.Transform(first_video_pack, first_video_tag);
+		rtmp_to_flv_codec_.Transform(first_audio_pack, first_audio_tag);
+
+		header_buffer_.AppendData(FlvHeader::DEFAULT_HEADER, FlvHeader::FLV_HEADER_LENGTH);
+
+		header_buffer_.AppendData(htonl(0));
+		header_buffer_.AppendData(first_script_tag->GetHeader(), FlvTag::FLV_TAG_HEADER_LENGTH);
+		header_buffer_.AppendData(first_script_tag->GetBody());
+
+		header_buffer_.AppendData(htonl(first_script_tag->GetCurrentTagSize()));
+		header_buffer_.AppendData(first_video_tag->GetHeader(), FlvTag::FLV_TAG_HEADER_LENGTH);
+		header_buffer_.AppendData(first_video_tag->GetBody());
+
+		header_buffer_.AppendData(htonl(first_video_tag->GetCurrentTagSize()));
+		header_buffer_.AppendData(first_audio_tag->GetHeader(), FlvTag::FLV_TAG_HEADER_LENGTH);
+		header_buffer_.AppendData(first_audio_tag->GetBody());
 	}
 	return header_buffer_;
 }
@@ -219,18 +243,22 @@ void RtmpPushConnection::SendHeaderToClientConnection(
 	/**
 	 * 头部之后第一个 Tag的PreviousTagSize 需要设置为 头部中最后一个Tag的CurrentSize
 	 */
-	last_flv_tag_ptr_->SetPreviousTagSize(GetLastHeaderTagCurrentSize());
-	client_connection_ptr->AddFlvTag(last_flv_tag_ptr_);
+	// last_flv_tag_ptr_->SetPreviousTagSize(GetLastHeaderTagCurrentSize());
 }
 
 void RtmpPushConnection::OnNewFlvTag(const FlvTagPtr& tag_ptr)
 {
-	last_flv_tag_ptr_ = tag_ptr;
+//	for (auto& [connection_name, connection_ptr] : client_connection_map_)
+//	{
+//		connection_ptr->AddFlvTag(tag_ptr);
+//	}
+}
 
-	for (auto& [connection_name, connection_ptr] : client_connection_map_)
-	{
-		connection_ptr->AddFlvTag(tag_ptr);
-	}
+void RtmpPushConnection::OnNewRtmpPack(const RtmpPackPtr& rtmp_pack_ptr)
+{
+	FlvTagPtr flv_tag_ptr = std::make_shared<FlvTag>();
+	rtmp_to_flv_codec_.Transform(rtmp_pack_ptr, flv_tag_ptr);
+	OnNewFlvTag(flv_tag_ptr);
 }
 
 uint32_t RtmpPushConnection::GetLastHeaderTagCurrentSize() const

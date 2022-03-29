@@ -55,9 +55,13 @@ private:
 	// 上一个解析完成的数据包
 	RtmpPack last_rtmp_pack_;
 
+public:
+
 	RtmpPackPtr first_script_pack_;
 	RtmpPackPtr first_video_pack_;
 	RtmpPackPtr first_audio_pack_;
+
+private:
 
 	/**
 	 * @brief 解析头部

@@ -172,6 +172,11 @@ size_t Buffer::AppendData(const Buffer* buffer)
 	return AppendData(*buffer);
 }
 
+size_t Buffer::AppendData(size_t number)
+{
+	return AppendData(reinterpret_cast<char*>(&number), sizeof number);
+}
+
 void Buffer::DropAllData()
 {
 	AddReadIndex(ReadableLength());

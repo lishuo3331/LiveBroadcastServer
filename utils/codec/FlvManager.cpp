@@ -11,7 +11,6 @@ FlvManager::FlvManager(const std::string& file) :
 		codec_(),
 		file_(file),
 		flv_header_(),
-		video_audio_tags(),
 		current_tag_(nullptr),
 		last_tag_(nullptr),
 		flv_tags_(),
@@ -128,41 +127,17 @@ ssize_t FlvManager::ParseFile(size_t parse_length)
 
 FlvTag* FlvManager::GetScriptTag()
 {
-	return &script_tag_;
+	return nullptr;
 }
 
 FlvTag* FlvManager::GetVideoAudioTags()
 {
-	return &video_audio_tags[0];
+	return nullptr;
 }
 
 ssize_t FlvManager::EncodeHeadersToBuffer(Buffer* buffer)
 {
-	uint32_t data_length = FlvHeader::FLV_HEADER_LENGTH + script_tag_.GetCurrentTagSize() + 4
-						   + video_audio_tags[0].GetCurrentTagSize() + 4; //+ video_audio_tags[1].GetCurrentTagSize() + 4;
-
-	if (buffer->WritableLength() < data_length)
-	{
-		return 0;
-	}
-
-	ssize_t result = flv_header_.EncodeToBuffer(buffer->WriteBegin(), buffer->WritableLength());
-	assert(result > 0);
-	buffer->AddWriteIndex(result);
-
-	buffer->AppendData(script_tag_.GetHeader(), FlvTag::FLV_TAG_HEADER_LENGTH);
-	buffer->AppendData(script_tag_.GetBody());
-
-	video_audio_tags[0].SetPreviousTagSize(script_tag_.GetCurrentTagSize());
-	// video_audio_tags[1].SetPreviousTagSize(video_audio_tags[0].GetCurrentTagSize());
-
-	for (int i = 0; i < 1; ++i)
-	{
-		buffer->AppendData(video_audio_tags[i].GetHeader(), FlvTag::FLV_TAG_HEADER_LENGTH);
-		buffer->AppendData(video_audio_tags[i].GetBody());
-	}
-
-	return data_length;
+	return 0;
 }
 
 std::vector<FlvTag*>* FlvManager::GetFlvTags()
@@ -297,16 +272,16 @@ bool FlvManager::CheckTag()
 
 	/* Flv文件中 previous_tag_size为上一个Tag的长度 用于校验 相等则正确 否则校验失败*/
 
-	uint32_t tag_size = last_tag_->GetCurrentTagSize();
-	uint32_t previous_tag_size = current_tag_->GetPreviousTagSize();
+	// uint32_t tag_size = last_tag_->GetCurrentTagSize();
+	// uint32_t previous_tag_size = current_tag_->GetPreviousTagSize();
 
-	if (tag_size != previous_tag_size)
-	{
-		printf("check : tag_size-%d, previous_tag_size-%d\n", tag_size,
-				previous_tag_size);
-
-		return false;
-	}
+//	if (tag_size != previous_tag_size)
+//	{
+//		printf("check : tag_size-%d, previous_tag_size-%d\n", tag_size,
+//				previous_tag_size);
+//
+//		return false;
+//	}
 
 	return true;
 }

@@ -10,6 +10,7 @@
 #include "network/TcpConnection.h"
 #include "utils/codec/RtmpManager.h"
 #include "live/connection/HttpPullConnection.h"
+#include "utils/codec/Rtmp2FlvCodec.h"
 
 /**
  * 管理Tcp连接 和 RtmpManager
@@ -88,10 +89,9 @@ private:
 
 	RtmpManager rtmp_manager_;
 	FlvManager* flv_manager_;
+	Rtmp2FlvCodec rtmp_to_flv_codec_;
 
 	size_t last_write_size_;
-
-	FlvTagPtr last_flv_tag_ptr_;
 
 	/**
 	 * Flv流源数据缓冲区
@@ -122,6 +122,8 @@ private:
 	 * @param new_tag
 	 */
 	void OnNewFlvTag(const FlvTagPtr& new_tag);
+
+	void OnNewRtmpPack(const RtmpPackPtr& rtmp_pack_ptr);
 
 	uint32_t GetLastHeaderTagCurrentSize() const;
 

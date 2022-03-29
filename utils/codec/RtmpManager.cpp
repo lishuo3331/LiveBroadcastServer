@@ -6,10 +6,10 @@
 #include "utils/Logger.h"
 
 RtmpManager::RtmpManager():
+		rtmp_codec_(),
 		parsed_status_(RtmpManager::PARSE_FIRST_HEADER),
 		shake_hand_status_(RtmpManager::SHAKE_RTMP_C01),
 		parsed_length_(0),
-		rtmp_codec_(),
 		flv_manager_()
 {
 }
@@ -25,7 +25,11 @@ ssize_t RtmpManager::ParseData(Buffer* buffer)
 	if (pack_finish)
 	{
 		// TODO
-		RtmpPack pack = rtmp_codec_.GetLastRtmpPack();
+		RtmpPackPtr pack_ptr = std::make_shared<RtmpPack>(rtmp_codec_.GetLastRtmpPack());
+		if (new_rtmp_pack_callback_)
+		{
+			new_rtmp_pack_callback_(pack_ptr);
+		}
 	}
 	return result;
 }
@@ -33,11 +37,6 @@ ssize_t RtmpManager::ParseData(Buffer* buffer)
 FlvManager* RtmpManager::GetFlvManager()
 {
 	return &flv_manager_;
-}
-
-void RtmpManager::SetNewFlvTagCallback(const NewFlvTagCallback& callback)
-{
-	new_flv_tag_callback_ = callback;
 }
 
 std::string RtmpManager::GetUrlFromConnectPack() const
@@ -56,25 +55,9 @@ std::string RtmpManager::GetPasswordFromReleasePack()
 	return std::string(&release_buffer_begin[29], len);
 }
 
-void RtmpManager::ProcessNewFlvTag(const FlvTagPtr& tag_ptr)
+void RtmpManager::SetNewRtmpPackCallback(const NewRtmpPackCallback& callback)
 {
-	if (tag_ptr->GetTagType() == RtmpPack::RTMP_VIDEO || tag_ptr->GetTagType() == RtmpPack::RTMP_AUDIO)
-	{
-		if (last_flv_ptr_)
-		{
-			tag_ptr->SetPreviousTagSize(last_flv_ptr_->GetCurrentTagSize());
-		}
-		else
-		{
-			tag_ptr->SetPreviousTagSize(0);
-		}
-		last_flv_ptr_ = tag_ptr;
-
-		if (new_flv_tag_callback_)
-		{
-			new_flv_tag_callback_(tag_ptr);
-		}
-	}
+	new_rtmp_pack_callback_ = callback;
 }
 
 RtmpManager::ShakeHandPackType RtmpManager::ParseShakeHand(Buffer* buffer)

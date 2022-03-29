@@ -1,7 +1,5 @@
 #include "utils/codec/FlvCodec.h"
 
-char FlvHeader::DEFAULT_HEADER[] = { 0x46, 0x4C, 0x56, 0x01, 0x01, 0x00, 0x00, 0x00, 0x09 };
-
 ssize_t FlvCodec::DecodeFileHeader(const char* data, size_t length, FlvHeader* tag)
 {
 	if (length < FlvHeader::FLV_HEADER_LENGTH)
@@ -59,21 +57,21 @@ uint32_t FlvTag::GetDataSize() const
 		   static_cast<uint8_t>(header_[DATA_SIZE_SUB + 2]);
 }
 
-uint32_t FlvTag::GetPreviousTagSize() const
-{
-	/*
-	previous_tag_size_为大端序
-	*/
-	const uint32_t* previous_tag_size = reinterpret_cast<const uint32_t*>(&header_[PREVIOUS_TAG_SIZE_SUB]);
-	return previous_tag_size[0] * 0x1000000+
-			previous_tag_size[0] * 0x10000+
-			previous_tag_size[0] * 0x100+
-			previous_tag_size[0];
-}
+//uint32_t FlvTag::GetPreviousTagSize() const
+//{
+//	/*
+//	previous_tag_size_为大端序
+//	*/
+//	const uint32_t* previous_tag_size = reinterpret_cast<const uint32_t*>(&header_[PREVIOUS_TAG_SIZE_SUB]);
+//	return previous_tag_size[0] * 0x1000000+
+//			previous_tag_size[0] * 0x10000+
+//			previous_tag_size[0] * 0x100+
+//			previous_tag_size[0];
+//}
 
 uint32_t FlvTag::GetCurrentTagSize() const
-{   /*长度部分 除去previous_tag_size_ 附加data长度*/
-	return FLV_TAG_HEADER_LENGTH - 4 + GetDataSize();
+{
+	return FLV_TAG_HEADER_LENGTH + GetDataSize();
 }
 
 uint32_t FlvTag::GetBodyDataLength() const
@@ -134,17 +132,17 @@ const char* FlvTag::GetHeader() const
 	return header_;
 }
 
-void FlvTag::SetPreviousTagSize(uint32_t previous_tag_size)
-{
-	// 统一使用大端序存储数据 便于统一序列化
-	uint8_t* previous_tag_size_t = reinterpret_cast<uint8_t*>(&previous_tag_size);
-	uint8_t* previous_tag_size_t_ = reinterpret_cast<uint8_t*>(&header_[PREVIOUS_TAG_SIZE_SUB]);
-
-	previous_tag_size_t_[0] = previous_tag_size_t[3];
-	previous_tag_size_t_[1] = previous_tag_size_t[2];
-	previous_tag_size_t_[2] = previous_tag_size_t[1];
-	previous_tag_size_t_[3] = previous_tag_size_t[0];
-}
+//void FlvTag::SetPreviousTagSize(uint32_t previous_tag_size)
+//{
+//	// 统一使用大端序存储数据 便于统一序列化
+//	uint8_t* previous_tag_size_t = reinterpret_cast<uint8_t*>(&previous_tag_size);
+//	uint8_t* previous_tag_size_t_ = reinterpret_cast<uint8_t*>(&header_[PREVIOUS_TAG_SIZE_SUB]);
+//
+//	previous_tag_size_t_[0] = previous_tag_size_t[3];
+//	previous_tag_size_t_[1] = previous_tag_size_t[2];
+//	previous_tag_size_t_[2] = previous_tag_size_t[1];
+//	previous_tag_size_t_[3] = previous_tag_size_t[0];
+//}
 
 uint8_t FlvTag::GetTagType() const
 {
