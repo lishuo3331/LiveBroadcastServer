@@ -248,10 +248,10 @@ void RtmpPushConnection::SendHeaderToClientConnection(
 
 void RtmpPushConnection::OnNewFlvTag(const FlvTagPtr& tag_ptr)
 {
-//	for (auto& [connection_name, connection_ptr] : client_connection_map_)
-//	{
-//		connection_ptr->AddFlvTag(tag_ptr);
-//	}
+	for (auto& [connection_name, connection_ptr] : client_connection_map_)
+	{
+		connection_ptr->AddFlvTag(tag_ptr);
+	}
 }
 
 void RtmpPushConnection::OnNewRtmpPack(const RtmpPackPtr& rtmp_pack_ptr)

@@ -17,6 +17,10 @@ public:
 	Rtmp2FlvCodec();
 
 	void Transform(const RtmpPackPtr& rtmp_pack_, FlvTagPtr& flv_tag);
+
+private:
+
+	uint32_t base_timestamp_ = 0;
 };
 
 

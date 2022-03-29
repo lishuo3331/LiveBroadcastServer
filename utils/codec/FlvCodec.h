@@ -132,7 +132,7 @@ public:
 
 	void SetDataSize(const uint8_t* data_size);
 
-	void SetTimeStamp(const uint8_t* timestamp);
+	void SetTimeStamp(uint32_t timestamp);
 
 	void SetSteamId(uint8_t* stream_id);
 

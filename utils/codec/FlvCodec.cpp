@@ -1,3 +1,4 @@
+#include <arpa/inet.h>
 #include "utils/codec/FlvCodec.h"
 
 ssize_t FlvCodec::DecodeFileHeader(const char* data, size_t length, FlvHeader* tag)
@@ -106,9 +107,12 @@ void FlvTag::SetDataSize(const uint8_t* data_size)
 	memcpy(&header_[DATA_SIZE_SUB], data_size, DATA_SIZE_LENGTH);
 }
 
-void FlvTag::SetTimeStamp(const uint8_t* timestamp)
+void FlvTag::SetTimeStamp(uint32_t timestamp)
 {
-	memcpy(&header_[TIMESTAMP_SUB], timestamp, TIMESTAMP_LENGTH);
+	uint32_t big_end = ntohl(timestamp);
+	uint8_t* big_end_ptr = reinterpret_cast<uint8_t*>(&big_end);
+	// 转换成大端序后 需要去掉原本的最高位字节，也就是大端序的第一个字节
+	memcpy(&header_[TIMESTAMP_SUB], big_end_ptr + 1, TIMESTAMP_LENGTH);
 }
 
 void FlvTag::SetSteamId(uint8_t* stream_id)
