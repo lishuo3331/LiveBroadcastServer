@@ -20,6 +20,12 @@ private:
     InetAddress server_address_;
 	std::string http_root_;
 	void OnHttpMessage(const TcpConnectionPtr& connection_ptr, Buffer* buffer, Timestamp timestamp);
+
+	std::string GetResponseText(const std::string& url);
+
+	std::string GetResponseTextFromFile(const std::string& url);
+
+	static std::string GetResponseTestFromVar(const std::string& url);
 };
 
 

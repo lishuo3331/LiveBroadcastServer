@@ -44,7 +44,7 @@ void InitSignal()
 
 int main(int argc, char* argv[])
 {
-	if (argc != 4)
+	if (argc < 4)
 	{
 		printf("wrong number of parameters\r\n");
 		exit(-1);
@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
 
 	HttpServer http_server(&loop, "http_server", http_server_address);
 	http_server.SetThreadNum(2);
-	http_server.SetHttpRoot("/tmp/tmp.AGeWz2Sgze/flv");
+	http_server.SetHttpRoot(argc > 4 ? argv[4] : "");
 
 	http_pull_server.SetGetPushConnCallback([server = &rtmp_push_server](auto&& PH1)
 	{
